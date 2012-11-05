@@ -23,7 +23,7 @@ all: baz
 foo:: f1.h ; @echo foo FIRST
 foo:: f2.h ; @echo foo SECOND
 
-bar:: ; @echo aaa; sleep 1; echo aaa done
+bar:: ; @echo aaa; sleep 4; echo aaa done
 bar:: ; @echo bbb
 
 baz:: ; @echo aaa
