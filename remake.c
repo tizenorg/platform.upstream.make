@@ -300,7 +300,8 @@ update_file (struct file *file, unsigned int depth)
          the diagnostics haven't been issued. If we need the diagnostics
          then we will have to continue. */
       if (!(f->updated && f->update_status > us_none
-            && !f->dontcare && f->no_diag))
+            && !f->dontcare && f->no_diag)
+            && f->command_state!=cs_not_started )
         {
           DBF (DB_VERBOSE, _("Pruning file '%s'.\n"));
           return f->command_state == cs_finished ? f->update_status : 0;
