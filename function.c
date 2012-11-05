@@ -1133,19 +1133,14 @@ func_sort (char *o, char **argv, const char *funcname UNUSED)
 
   /* Find the maximum number of words we'll have.  */
   t = argv[0];
-  wordi = 1;
-  while (*t != '\0')
+  wordi = 0;
+  while ((p = find_next_token (&t, &len)) != 0)
     {
-      char c = *(t++);
-
-      if (! isspace ((unsigned char)c))
-        continue;
-
-      ++wordi;
-
-      while (isspace ((unsigned char)*t))
-        ++t;
+      ++t;
+      wordi++;
     }
+  if (! wordi)
+    wordi = 1;
 
   words = xmalloc (wordi * sizeof (char *));
 
