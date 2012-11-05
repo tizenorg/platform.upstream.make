@@ -50,7 +50,7 @@ $test_passed = 1;
 
 
 # Timeout in seconds.  If the test takes longer than this we'll fail it.
-$test_timeout = 5;
+$test_timeout = 20;
 
 # Path to Perl
 $perl_name = $^X;
