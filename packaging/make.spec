@@ -1,7 +1,6 @@
 Name:           make
 Url:            http://www.gnu.org/software/make/make.html
 Provides:       gmake
-PreReq:         %install_info_prereq
 Version:        3.82
 Release:        0
 Summary:        GNU make
