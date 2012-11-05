@@ -301,7 +301,7 @@ update_file (struct file *file, unsigned int depth)
       /* Check for the case where a target has been tried and failed but
          the diagnostics hasn't been issued. If we need the diagnostics
          then we will have to continue. */
-      if (!(f->updated && f->update_status > 0 && !f->dontcare && f->no_diag))
+      if (!(f->updated && f->update_status > 0 && !f->dontcare && f->no_diag) && f->command_state!=cs_not_started )
         {
           DBF (DB_VERBOSE, _("Pruning file `%s'.\n"));
           return f->command_state == cs_finished ? f->update_status : 0;
@@ -614,6 +614,12 @@ update_file_1 (struct file *file, unsigned int depth)
                 d->file->dontcare = file->dontcare;
               }
 
+	    /* We may have already encountered this file earlier in the same
+	     * pass before we knew we'd be updating this target. In that 
+	     * case calling update_file now would result in the file being 
+	     * inappropriately pruned so we toggle the considered bit back 
+	     * off first. */
+            d->file->considered = !considered;
 
 	    dep_status |= update_file (d->file, depth);
 
