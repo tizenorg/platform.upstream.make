@@ -1,3 +1,8 @@
+2010-08-10  Paul Smith  <psmith@gnu.org>
+
+	* main.c (main): Expand MAKEFLAGS before adding it to the
+	environment when re-exec'ing.  Fixes Savannah bug #30723.
+
 2010-07-28  Paul Smith  <psmith@gnu.org>
 
 	Version 3.82 released.
