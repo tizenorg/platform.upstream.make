@@ -28,6 +28,7 @@ ln -s make $RPM_BUILD_ROOT/usr/bin/gmake
 
 %files 
 %defattr(-,root,root)
+%license COPYING
 /usr/bin/make
 /usr/bin/gmake
 %doc /usr/share/info/make.info-*.gz
