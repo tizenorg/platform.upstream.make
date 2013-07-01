@@ -7,12 +7,14 @@ Summary:        GNU make
 License:        GPL-2.0+
 Group:          Development/Tools/Building
 Source:         make-%version.tar.bz2
+Source1001: 	make.manifest
 
 %description
 The GNU make command with extensive documentation.
 
 %prep
 %setup -q
+cp %{SOURCE1001} .
 
 %build
 CFLAGS=$RPM_OPT_FLAGS \
@@ -27,6 +29,7 @@ make DESTDIR=$RPM_BUILD_ROOT install
 ln -s make $RPM_BUILD_ROOT/usr/bin/gmake
 
 %files 
+%manifest %{name}.manifest
 %defattr(-,root,root)
 %license COPYING
 /usr/bin/make
