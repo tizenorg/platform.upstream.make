@@ -17,8 +17,8 @@ The GNU make command with extensive documentation.
 cp %{SOURCE1001} .
 
 %build
-CFLAGS=$RPM_OPT_FLAGS \
-./configure --prefix=/usr --mandir=/usr/share/man --infodir=/usr/share/info --disable-nls
+export AUTOPOINT=true
+%reconfigure --disable-nls
 make %{?_smp_mflags}
 
 %check
