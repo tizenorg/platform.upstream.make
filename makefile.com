@@ -67,8 +67,8 @@ $ then
 $   gosub check_cc_qual
 $ endif
 $ filelist = "alloca ar arscan commands default dir expand file function " + -
-             "hash implicit job main misc read remake remote-stub rule " + -
-	     "signame variable version vmsfunctions vmsify vpath " + -
+             "hash implicit job load main misc read remake remote-stub rule " + -
+	     "output signame variable version vmsfunctions vmsify vpath " + -
 	     "[.glob]glob [.glob]fnmatch getopt1 getopt strcache"
 $ copy config.h-vms config.h
 $ n=0
@@ -138,8 +138,7 @@ $ exit
 $ endsubroutine : compileit
 $!
 $!-----------------------------------------------------------------------------
-$!Copyright (C) 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005,
-$!2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+$!Copyright (C) 1996-2013 Free Software Foundation, Inc.
 $!This file is part of GNU Make.
 $!
 $!GNU Make is free software; you can redistribute it and/or modify it under

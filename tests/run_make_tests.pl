@@ -11,9 +11,7 @@
 #                         [-make <make prog>]
 #                        (and others)
 
-# Copyright (C) 1992, 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001,
-# 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software
-# Foundation, Inc.
+# Copyright (C) 1992-2013 Free Software Foundation, Inc.
 # This file is part of GNU Make.
 #
 # GNU Make is free software; you can redistribute it and/or modify it under
@@ -29,12 +27,16 @@
 # You should have received a copy of the GNU General Public License along with
 # this program.  If not, see <http://www.gnu.org/licenses/>.
 
+%FEATURES = ();
 
 $valgrind = 0;              # invoke make with valgrind
 $valgrind_args = '';
-$memcheck_args = '--num-callers=15 --tool=memcheck --leak-check=full';
+$memcheck_args = '--num-callers=15 --tool=memcheck --leak-check=full --suppressions=guile.supp';
 $massif_args = '--num-callers=15 --tool=massif --alloc-fn=xmalloc --alloc-fn=xcalloc --alloc-fn=xrealloc --alloc-fn=xstrdup --alloc-fn=xstrndup';
 $pure_log = undef;
+
+# The location of the GNU make source directory
+$srcdir = '';
 
 $command_string = '';
 
@@ -55,6 +57,15 @@ sub valid_option
        $make_path = shift @argv;
        if (!-f $make_path) {
            print "$option $make_path: Not found.\n";
+           exit 0;
+       }
+       return 1;
+   }
+
+   if ($option =~ /^-srcdir$/i) {
+       $srcdir = shift @argv;
+       if (! -f "$srcdir/gnumake.h") {
+           print "$option $srcdir: Not a valid GNU make source directory.\n";
            exit 0;
        }
        return 1;
@@ -98,6 +109,17 @@ sub valid_option
 
 $old_makefile = undef;
 
+sub subst_make_string
+{
+    local $_ = shift;
+    $makefile and s/#MAKEFILE#/$makefile/g;
+    s/#MAKEPATH#/$mkpath/g;
+    s/#MAKE#/$make_name/g;
+    s/#PERL#/$perl_name/g;
+    s/#PWD#/$pwd/g;
+    return $_;
+}
+
 sub run_make_test
 {
   local ($makestring, $options, $answer, $err_code, $timeout) = @_;
@@ -115,16 +137,9 @@ sub run_make_test
       $makefile = &get_tmpfile();
     }
 
-    # Make sure it ends in a newline.
+    # Make sure it ends in a newline and substitute any special tokens.
     $makestring && $makestring !~ /\n$/s and $makestring .= "\n";
-
-    # Replace @MAKEFILE@ with the makefile name and @MAKE@ with the path to
-    # make
-    $makestring =~ s/#MAKEFILE#/$makefile/g;
-    $makestring =~ s/#MAKEPATH#/$mkpath/g;
-    $makestring =~ s/#MAKE#/$make_name/g;
-    $makestring =~ s/#PERL#/$perl_name/g;
-    $makestring =~ s/#PWD#/$pwd/g;
+    $makestring = subst_make_string($makestring);
 
     # Populate the makefile!
     open(MAKEFILE, "> $makefile") || die "Failed to open $makefile: $!\n";
@@ -133,13 +148,10 @@ sub run_make_test
   }
 
   # Do the same processing on $answer as we did on $makestring.
-
-  $answer && $answer !~ /\n$/s and $answer .= "\n";
-  $answer =~ s/#MAKEFILE#/$makefile/g;
-  $answer =~ s/#MAKEPATH#/$mkpath/g;
-  $answer =~ s/#MAKE#/$make_name/g;
-  $answer =~ s/#PERL#/$perl_name/g;
-  $answer =~ s/#PWD#/$pwd/g;
+  if (defined $answer) {
+      $answer && $answer !~ /\n$/s and $answer .= "\n";
+      $answer = subst_make_string($answer);
+  }
 
   run_make_with_options($makefile, $options, &get_logfile(0),
                         $err_code, $timeout);
@@ -228,14 +240,16 @@ sub run_make_with_options {
 sub print_usage
 {
    &print_standard_usage ("run_make_tests",
-                          "[-make_path make_pathname] [-memcheck] [-massif]",);
+                          "[-make MAKE_PATHNAME] [-srcdir SRCDIR] [-memcheck] [-massif]",);
 }
 
 sub print_help
 {
    &print_standard_help (
-        "-make_path",
+        "-make",
         "\tYou may specify the pathname of the copy of make to run.",
+        "-srcdir",
+        "\tSpecify the make source directory.",
         "-valgrind",
         "-memcheck",
         "\tRun the test suite under valgrind's memcheck tool.",
@@ -317,7 +331,7 @@ sub set_more_defaults
    $mk or die "FATAL ERROR: Cannot determine the value of \$(MAKE):\n
 'echo \"all:;\@echo \\\$(MAKE)\" | $make_path -f-' failed!\n";
    $make_path = $mk;
-   print "Make\t= `$make_path'\n" if $debug;
+   print "Make\t= '$make_path'\n" if $debug;
 
    $string = `$make_path -v -f /dev/null 2> /dev/null`;
 
@@ -329,12 +343,8 @@ sub set_more_defaults
      $make_name = $1;
    }
    else {
-     if ($make_path =~ /$pathsep([^\n$pathsep]*)$/) {
-       $make_name = $1;
-     }
-     else {
-       $make_name = $make_path;
-     }
+     $make_path =~ /^(?:.*$pathsep)?(.+)$/;
+     $make_name = $1;
    }
 
    # prepend pwd if this is a relative path (ie, does not
@@ -348,6 +358,24 @@ sub set_more_defaults
    else
    {
       $mkpath = $make_path;
+   }
+
+   # If srcdir wasn't provided on the command line, see if the
+   # location of the make program gives us a clue.  Don't fail if not;
+   # we'll assume it's been installed into /usr/include or wherever.
+   if (! $srcdir) {
+       $make_path =~ /^(.*$pathsep)?/;
+       my $d = $1 || '../';
+       -f "${d}gnumake.h" and $srcdir = $d;
+   }
+
+   # Not with the make program, so see if we can get it out of the makefile
+   if (! $srcdir && open(MF, "< ../Makefile")) {
+       local $/ = undef;
+       $_ = <MF>;
+       close(MF);
+       /^abs_srcdir\s*=\s*(.*?)\s*$/m;
+       -f "$1/gnumake.h" and $srcdir = $1;
    }
 
    # Get Purify log info--if any.
@@ -366,6 +394,8 @@ sub set_more_defaults
    else {
      $parallel_jobs = 1;
    }
+
+   %FEATURES = map { $_ => 1 } split /\s+/, `sh -c "echo '\\\$(info \\\$(.FEATURES))' | $make_path -f- 2>/dev/null"`;
 
    # Set up for valgrind, if requested.
 

@@ -1,7 +1,5 @@
 /* Miscellaneous global declarations and portability cruft for GNU Make.
-Copyright (C) 1988, 1989, 1990, 1991, 1992, 1993, 1994, 1995, 1996, 1997,
-1998, 1999, 2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009,
-2010 Free Software Foundation, Inc.
+Copyright (C) 1988-2013 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the
@@ -18,7 +16,7 @@ this program.  If not, see <http://www.gnu.org/licenses/>.  */
 
 /* We use <config.h> instead of "config.h" so that a compilation
    using -I. -I$srcdir will use ./config.h rather than $srcdir/config.h
-   (which it would do because make.h was found in $srcdir).  */
+   (which it would do because makeint.h was found in $srcdir).  */
 #include <config.h>
 #undef  HAVE_CONFIG_H
 #define HAVE_CONFIG_H 1
@@ -43,6 +41,20 @@ char *alloca ();
 # endif
 #endif
 
+/* Disable assert() unless we're a maintainer.
+   Some asserts are compute-intensive.  */
+#ifndef MAKE_MAINTAINER_MODE
+# define NDEBUG 1
+#endif
+
+/* Include the externally-visible content.
+   Be sure to use the local one, and not one installed on the system.
+   Define GMK_BUILDING_MAKE for proper selection of dllexport/dllimport
+   declarations for MS-Windows.  */
+#ifdef WINDOWS32
+# define GMK_BUILDING_MAKE
+#endif
+#include "gnumake.h"
 
 #ifdef  CRAY
 /* This must happen before #include <signal.h> so
@@ -60,13 +72,12 @@ char *alloca ();
 #include <signal.h>
 #include <stdio.h>
 #include <ctype.h>
+
 #ifdef HAVE_SYS_TIMEB_H
-/* SCO 3.2 "devsys 4.2" has a prototype for `ftime' in <time.h> that bombs
-   unless <sys/timeb.h> has been included first.  Does every system have a
-   <sys/timeb.h>?  If any does not, configure should check for it.  */
+/* SCO 3.2 "devsys 4.2" has a prototype for 'ftime' in <time.h> that bombs
+   unless <sys/timeb.h> has been included first.  */
 # include <sys/timeb.h>
 #endif
-
 #if TIME_WITH_SYS_TIME
 # include <sys/time.h>
 # include <time.h>
@@ -91,7 +102,7 @@ extern int errno;
 #ifdef  HAVE_UNISTD_H
 # include <unistd.h>
 /* Ultrix's unistd.h always defines _POSIX_VERSION, but you only get
-   POSIX.1 behavior with `cc -YPOSIX', which predefines POSIX itself!  */
+   POSIX.1 behavior with 'cc -YPOSIX', which predefines POSIX itself!  */
 # if defined (_POSIX_VERSION) && !defined (ultrix) && !defined (VMS)
 #  define POSIX 1
 # endif
@@ -148,14 +159,22 @@ unsigned int get_path_max (void);
 # define CHAR_BIT 8
 #endif
 
-/* Nonzero if the integer type T is signed.  */
-#define INTEGER_TYPE_SIGNED(t) ((t) -1 < 0)
+#ifndef USHRT_MAX
+# define USHRT_MAX 65535
+#endif
+
+/* Nonzero if the integer type T is signed.
+   Use <= to avoid GCC warnings about always-false expressions.  */
+#define INTEGER_TYPE_SIGNED(t) ((t) -1 <= 0)
 
 /* The minimum and maximum values for the integer type T.
    Use ~ (t) 0, not -1, for portability to 1's complement hosts.  */
 #define INTEGER_TYPE_MINIMUM(t) \
   (! INTEGER_TYPE_SIGNED (t) ? (t) 0 : ~ (t) 0 << (sizeof (t) * CHAR_BIT - 1))
 #define INTEGER_TYPE_MAXIMUM(t) (~ (t) 0 - INTEGER_TYPE_MINIMUM (t))
+
+/* The maximum number of digits needed to represent the largest integer.  */
+#define INTEGER_LENGTH sizeof("18446744073709551616")
 
 #ifndef CHAR_MAX
 # define CHAR_MAX INTEGER_TYPE_MAXIMUM (char)
@@ -178,6 +197,7 @@ unsigned int get_path_max (void);
 #endif
 
 #ifdef VMS
+# include <fcntl.h>
 # include <types.h>
 # include <unixlib.h>
 # include <unixio.h>
@@ -191,7 +211,7 @@ unsigned int get_path_max (void);
 # if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 5) || __STRICT_ANSI__
 #  define __attribute__(x)
 # endif
-/* The __-protected variants of `format' and `printf' attributes
+/* The __-protected variants of 'format' and 'printf' attributes
    are accepted by gcc versions 2.6.4 (effectively 2.7) and later.  */
 # if __GNUC__ < 2 || (__GNUC__ == 2 && __GNUC_MINOR__ < 7)
 #  define __format__ format
@@ -249,6 +269,9 @@ char *strerror (int errnum);
 #if HAVE_INTTYPES_H
 # include <inttypes.h>
 #endif
+#if HAVE_STDINT_H
+# include <stdint.h>
+#endif
 #define FILE_TIMESTAMP uintmax_t
 
 #if !defined(HAVE_STRSIGNAL)
@@ -262,7 +285,7 @@ char *strsignal (int signum);
    - It's typically faster.
    POSIX 1003.2-1992 section 2.5.2.1 page 50 lines 1556-1558 says that
    only '0' through '9' are digits.  Prefer ISDIGIT to isdigit() unless
-   it's important to use the locale's definition of `digit' even when the
+   it's important to use the locale's definition of 'digit' even when the
    host does not conform to POSIX.  */
 #define ISDIGIT(c) ((unsigned) (c) - '0' <= 9)
 
@@ -305,11 +328,15 @@ char *strsignal (int signum);
 #define N_(msgid)           gettext_noop (msgid)
 #define S_(msg1,msg2,num)   ngettext (msg1,msg2,num)
 
-/* Handle other OSs.  */
-#ifndef PATH_SEPARATOR_CHAR
-# if defined(HAVE_DOS_PATHS)
-#  define PATH_SEPARATOR_CHAR ';'
-# elif defined(VMS)
+/* Handle other OSs.
+   To overcome an issue parsing paths in a DOS/Windows environment when
+   built in a unix based environment, override the PATH_SEPARATOR_CHAR
+   definition unless being built for Cygwin. */
+#if defined(HAVE_DOS_PATHS) && !defined(__CYGWIN__)
+# undef PATH_SEPARATOR_CHAR
+# define PATH_SEPARATOR_CHAR ';'
+#elif !defined(PATH_SEPARATOR_CHAR)
+# if defined (VMS)
 #  define PATH_SEPARATOR_CHAR ','
 # else
 #  define PATH_SEPARATOR_CHAR ':'
@@ -326,10 +353,17 @@ char *strsignal (int signum);
 # include <malloc.h>
 # define pipe(_p)        _pipe((_p), 512, O_BINARY)
 # define kill(_pid,_sig) w32_kill((_pid),(_sig))
+/* MSVC doesn't have ftruncate.  */
+# ifdef _MSC_VER
+#  define ftruncate(_fd,_len) _chsize(_fd,_len)
+# endif
+/* MinGW64 doesn't have _S_ISDIR.  */
+# ifndef _S_ISDIR
+#  define _S_ISDIR(m)  S_ISDIR(m)
+# endif
 
 void sync_Path_environment (void);
 int w32_kill (pid_t pid, int sig);
-char *end_of_token_w32 (const char *s, char stopchar);
 int find_and_set_default_shell (const char *token);
 
 /* indicates whether or not we have Bourne shell */
@@ -337,54 +371,72 @@ extern int no_default_sh_exe;
 
 /* is default_shell unixy? */
 extern int unixy_shell;
+
+/* We don't have a preferred fixed value for LOCALEDIR.  */
+# ifndef LOCALEDIR
+#  define LOCALEDIR NULL
+# endif
+
+/* Include only the minimal stuff from windows.h.   */
+#define WIN32_LEAN_AND_MEAN
 #endif  /* WINDOWS32 */
+
+#define ANY_SET(_v,_m)  (((_v)&(_m)) != 0)
+#define NONE_SET(_v,_m) (! ANY_SET ((_v),(_m)))
+
+#define MAP_NUL         0x0001
+#define MAP_BLANK       0x0002
+#define MAP_SPACE       0x0004
+#define MAP_COMMENT     0x0008
+#define MAP_SEMI        0x0010
+#define MAP_EQUALS      0x0020
+#define MAP_COLON       0x0040
+#define MAP_PERCENT     0x0080
+#define MAP_PIPE        0x0100
+#define MAP_DOT         0x0200
+#define MAP_COMMA       0x0400
+
+/* These are the valid characters for a user-defined function.  */
+#define MAP_USERFUNC    0x2000
+/* This means not only a '$', but skip the variable reference.  */
+#define MAP_VARIABLE    0x4000
+/* The set of characters which are path separators is OS-specific.  */
+#define MAP_PATHSEP     0x8000
+
+#ifdef VMS
+# define MAP_VMSCOMMA   MAP_COMMA
+#else
+# define MAP_VMSCOMMA   0x0000
+#endif
+
+#define STOP_SET(_v,_m) ANY_SET (stopchar_map[(int)(_v)],(_m))
 
 #if defined(HAVE_SYS_RESOURCE_H) && defined(HAVE_GETRLIMIT) && defined(HAVE_SETRLIMIT)
 # define SET_STACK_SIZE
 #endif
 #ifdef SET_STACK_SIZE
 # include <sys/resource.h>
-struct rlimit stack_limit;
+extern struct rlimit stack_limit;
 #endif
 
-struct floc
-  {
-    const char *filenm;
-    unsigned long lineno;
-  };
-#define NILF ((struct floc *)0)
+#define NILF ((gmk_floc *)0)
 
-#define STRING_SIZE_TUPLE(_s) (_s), (sizeof (_s)-1)
+#define CSTRLEN(_s) (sizeof (_s)-1)
+#define STRING_SIZE_TUPLE(_s) (_s), CSTRLEN(_s)
 
 
-/* We have to have stdarg.h or varargs.h AND v*printf or doprnt to use
-   variadic versions of these functions.  */
-
-#if HAVE_STDARG_H || HAVE_VARARGS_H
-# if HAVE_VPRINTF || HAVE_DOPRNT
-#  define USE_VARIADIC 1
-# endif
-#endif
-
-#if HAVE_ANSI_COMPILER && USE_VARIADIC && HAVE_STDARG_H
 const char *concat (unsigned int, ...);
 void message (int prefix, const char *fmt, ...)
               __attribute__ ((__format__ (__printf__, 2, 3)));
-void error (const struct floc *flocp, const char *fmt, ...)
+void error (const gmk_floc *flocp, const char *fmt, ...)
             __attribute__ ((__format__ (__printf__, 2, 3)));
-void fatal (const struct floc *flocp, const char *fmt, ...)
+void fatal (const gmk_floc *flocp, const char *fmt, ...)
                    __attribute__ ((noreturn, __format__ (__printf__, 2, 3)));
-#else
-const char *concat ();
-void message ();
-void error ();
-void fatal ();
-#endif
 
 void die (int) __attribute__ ((noreturn));
-void log_working_directory (int);
 void pfatal_with_name (const char *) __attribute__ ((noreturn));
 void perror_with_name (const char *, const char *);
+#define xstrlen(_s) ((_s)==NULL ? 0 : strlen (_s))
 void *xmalloc (unsigned int);
 void *xcalloc (unsigned int);
 void *xrealloc (void *, unsigned int);
@@ -399,7 +451,6 @@ int alpha_compare (const void *, const void *);
 void print_spaces (unsigned int);
 char *find_percent (char *);
 const char *find_percent_cached (const char **);
-FILE *open_tmpfile (char **, const char *);
 
 #ifndef NO_ARCHIVES
 int ar_name (const char *);
@@ -408,9 +459,9 @@ int ar_touch (const char *);
 time_t ar_member_date (const char *);
 
 typedef long int (*ar_member_func_t) (int desc, const char *mem, int truncated,
-				      long int hdrpos, long int datapos,
-				      long int size, long int date, int uid,
-				      int gid, int mode, const void *arg);
+                                      long int hdrpos, long int datapos,
+                                      long int size, long int date, int uid,
+                                      int gid, int mode, const void *arg);
 
 long int ar_scan (const char *archive, ar_member_func_t function, const void *arg);
 int ar_name_equal (const char *name, const char *mem, int truncated);
@@ -427,6 +478,7 @@ const char *dir_name (const char *);
 void hash_init_directories (void);
 
 void define_default_variables (void);
+void undefine_default_variables (void);
 void set_default_suffixes (void);
 void install_default_suffix_rules (void);
 void install_default_implicit_rules (void);
@@ -443,8 +495,6 @@ void user_access (void);
 void make_access (void);
 void child_access (void);
 
-void close_stdout (void);
-
 char *strip_whitespace (const char **begpp, const char **endpp);
 
 /* String caching  */
@@ -452,12 +502,18 @@ void strcache_init (void);
 void strcache_print_stats (const char *prefix);
 int strcache_iscached (const char *str);
 const char *strcache_add (const char *str);
-const char *strcache_add_len (const char *str, int len);
-int strcache_setbufsize (int size);
+const char *strcache_add_len (const char *str, unsigned int len);
+int strcache_setbufsize (unsigned int size);
 
-#ifdef  HAVE_VFORK_H
-# include <vfork.h>
+/* Guile support  */
+#ifdef HAVE_GUILE
+int guile_gmake_setup (const gmk_floc *flocp);
 #endif
+
+/* Loadable object support.  Sets to the strcached name of the loaded file.  */
+typedef int (*load_func_t)(const gmk_floc *flocp);
+int load_file (const gmk_floc *flocp, const char **filename, int noerror);
+void unload_file (const char *name);
 
 /* We omit these declarations on non-POSIX systems which define _POSIX_VERSION,
    because such systems often declare them in header files anyway.  */
@@ -502,18 +558,25 @@ int strncasecmp (const char *s1, const char *s2, int n);
 # endif
 #endif
 
-extern const struct floc *reading_file;
-extern const struct floc **expanding_var;
+#define OUTPUT_SYNC_NONE    0
+#define OUTPUT_SYNC_LINE    1
+#define OUTPUT_SYNC_TARGET  2
+#define OUTPUT_SYNC_RECURSE 3
+
+extern const gmk_floc *reading_file;
+extern const gmk_floc **expanding_var;
 
 extern char **environ;
+
+extern unsigned short stopchar_map[];
 
 extern int just_print_flag, silent_flag, ignore_errors_flag, keep_going_flag;
 extern int print_data_base_flag, question_flag, touch_flag, always_make_flag;
 extern int env_overrides, no_builtin_rules_flag, no_builtin_variables_flag;
 extern int print_version_flag, print_directory_flag, check_symlink_flag;
-extern int warn_undefined_variables_flag, posix_pedantic, not_parallel;
-extern int second_expansion, clock_skew_detected, rebuilding_makefiles;
-extern int one_shell;
+extern int warn_undefined_variables_flag, trace_flag, posix_pedantic;
+extern int not_parallel, second_expansion, clock_skew_detected;
+extern int rebuilding_makefiles, one_shell, output_sync, verify_flag;
 
 /* can we run commands via 'sh -c xxx' or must we use batch files? */
 extern int batch_mode_shell;

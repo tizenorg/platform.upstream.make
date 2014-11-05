@@ -1,8 +1,7 @@
 # -*-Makefile-*- template for DJGPP
 # Makefile.in generated automatically by automake 1.2 from Makefile.am
 #
-# Copyright (C) 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002, 2003,
-# 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+# Copyright (C) 1994-2013 Free Software Foundation, Inc.
 # This file is part of GNU Make.
 #
 # GNU Make is free software; you can redistribute it and/or modify it under
@@ -72,13 +71,13 @@ PACKAGE = make
 PERL = perl
 RANLIB = ranlib
 REMOTE = stub
-VERSION = 3.82
+VERSION = 4.0
 
 AUTOMAKE_OPTIONS = 1.2
 
 bin_PROGRAMS =	make$(EXEEXT)
 
-make_SOURCES =	ar.c arscan.c commands.c default.c dir.c expand.c file.c function.c getopt.c getopt1.c implicit.c job.c main.c misc.c read.c remake.c rule.c signame.c strcache.c variable.c version.c vpath.c hash.c remote-$(REMOTE).c
+make_SOURCES =	ar.c arscan.c commands.c default.c dir.c expand.c file.c function.c getopt.c getopt1.c implicit.c job.c load.c loadapi.c main.c misc.c output.c read.c remake.c rule.c signame.c strcache.c variable.c version.c vpath.c hash.c guile.c remote-$(REMOTE).c
 # This should include the glob/ prefix
 libglob_a_SOURCES =	glob/fnmatch.c glob/glob.c glob/fnmatch.h glob/glob.h
 make_LDADD =	  glob/libglob.a
@@ -89,7 +88,7 @@ INCLUDES =	-I$(srcdir)/glob -DLIBDIR=\"$(prefix)$(libdir)\" -DINCLUDEDIR=\"$(pre
 
 BUILT_SOURCES =	README build.sh-in
 
-EXTRA_DIST = 	$(BUILT_SOURCES) $(man_MANS) README.customs remote-cstms.c  make-stds.texi texinfo.tex SCOPTIONS SMakefile  Makefile.ami README.Amiga config.ami amiga.c amiga.h  NMakefile README.DOS configh.dos configure.bat makefile.com  README.W32 build_w32.bat config.h-W32 subproc.bat make.lnk  config.h-vms makefile.vms readme.vms vmsdir.h vmsfunctions.c  vmsify.c
+EXTRA_DIST =	$(BUILT_SOURCES) $(man_MANS) README.customs remote-cstms.c  make-stds.texi texinfo.tex SCOPTIONS SMakefile  Makefile.ami README.Amiga config.ami amiga.c amiga.h  NMakefile README.DOS configh.dos configure.bat makefile.com  README.W32 build_w32.bat config.h-W32 subproc.bat make.lnk  config.h-vms makefile.vms README.VMS vmsdir.h vmsfunctions.c  vmsify.c gmk-default.scm gmk-default.h
 
 SUBDIRS =	glob doc
 mkinstalldirs = ${exec_prefix}/bin/gmkdir -p
@@ -104,7 +103,7 @@ DEFS =  -I. -I$(srcdir) -I.
 CPPFLAGS = -DHAVE_CONFIG_H
 LDFLAGS =
 LIBS =
-make_OBJECTS =  ar.o arscan.o commands.o default.o dir.o expand.o file.o function.o getopt.o getopt1.o implicit.o job.o main.o misc.o read.o remake.o rule.o signame.o strcache.o variable.o version.o vpath.o hash.o remote-$(REMOTE).o
+make_OBJECTS =  ar.o arscan.o commands.o default.o dir.o expand.o file.o function.o getopt.o getopt1.o implicit.o job.o load.o loadapi.o main.o misc.o output.o read.o remake.o rule.o signame.o strcache.o variable.o version.o vpath.o hash.o guile.o remote-$(REMOTE).o
 make_DEPENDENCIES =    glob/libglob.a
 make_LDFLAGS =
 libglob_a_LIBADD =
@@ -123,7 +122,7 @@ man1dir = $(mandir)/man1
 MANS = $(man_MANS)
 
 NROFF = nroff
-DIST_COMMON =  README ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL Makefile.am  Makefile.in NEWS acconfig.h aclocal.m4 alloca.c build.sh-in config.h-in  configure configure.in getloadavg.c
+DIST_COMMON =  README ABOUT-NLS AUTHORS COPYING ChangeLog INSTALL Makefile.am  Makefile.in NEWS acconfig.h aclocal.m4 alloca.c build.sh-in config.h-in  configure configure.ac getloadavg.c
 
 DISTFILES = $(DIST_COMMON) $(SOURCES) $(HEADERS) $(TEXINFOS) $(EXTRA_DIST)
 
@@ -507,7 +506,7 @@ html
 #
 dist-hook:
 	(cd $(srcdir); \
-	 w32=`find w32 -follow \( -name CVS -prune \) -o -type f -print`; \
+	 w32=`find w32 -follow \( -name .git -prune \) -o -type f -print`; \
 	 tar chf - $$w32) \
 	| (cd $(distdir); tar xfBp -)
 
@@ -594,60 +593,67 @@ check-regression:
 # dummy
 
 # .deps/ar.Po
-ar.o: ar.c make.h config.h \
+ar.o: ar.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
  filedef.h hash.h dep.h \
 
 # .deps/arscan.Po
-arscan.o: arscan.c make.h config.h \
+arscan.o: arscan.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
 
 # .deps/commands.Po
-commands.o: commands.c make.h config.h \
+commands.o: commands.c \
+ makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- dep.h filedef.h hash.h variable.h job.h \
+ filedef.h hash.h dep.h \
+ variable.h job.h output.h \
  commands.h
 
 # .deps/default.Po
-default.o: default.c make.h config.h \
+default.o: default.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- filedef.h hash.h variable.h rule.h dep.h \
- job.h \
+ filedef.h hash.h variable.h rule.h dep.h job.h output.h \
  commands.h
 
 # .deps/dir.Po
-dir.o: dir.c make.h config.h \
+dir.o: dir.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- hash.h \
+ hash.h filedef.h dep.h \
 
 # .deps/expand.Po
-expand.o: expand.c make.h config.h \
+expand.o: expand.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- filedef.h hash.h \
- job.h \
- commands.h variable.h \
- rule.h
+ filedef.h hash.h job.h output.h \
+ commands.h variable.h rule.h
 
 # .deps/file.Po
-file.o: file.c make.h config.h \
+file.o: file.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- dep.h filedef.h \
- hash.h job.h \
+ filedef.h hash.h dep.h job.h output.h \
  commands.h variable.h \
  debug.h
 
 # .deps/function.Po
-function.o: function.c make.h config.h \
+function.o: function.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- filedef.h hash.h variable.h dep.h job.h \
+ filedef.h hash.h \
+ variable.h dep.h job.h output.h \
  commands.h debug.h
 
 # .deps/getloadavg.Po
@@ -659,96 +665,143 @@ getopt.o: getopt.c config.h \
 # .deps/getopt1.Po
 getopt1.o: getopt1.c config.h getopt.h \
 
+# .deps/guile.Po
+guile.o: guile.c makeint.h config.h \
+ gnumake.h \
+ getopt.h \
+ gettext.h \
+ debug.h filedef.h hash.h \
+ dep.h variable.h \
+ gmk-default.h
+
 # .deps/hash.Po
-hash.o: hash.c make.h config.h \
+hash.o: hash.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
  hash.h
 
 # .deps/implicit.Po
-implicit.o: implicit.c make.h config.h \
+implicit.o: implicit.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- filedef.h hash.h rule.h dep.h debug.h \
- variable.h job.h \
+ filedef.h hash.h rule.h \
+ dep.h debug.h variable.h job.h output.h \
  commands.h
 
 # .deps/job.Po
-job.o: job.c make.h config.h \
+job.o: job.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- job.h \
- debug.h filedef.h hash.h commands.h \
+ job.h output.h \
+ debug.h filedef.h hash.h \
+ commands.h variable.h
+
+# .deps/load.Po
+load.o: load.c makeint.h config.h \
+ gnumake.h \
+ getopt.h \
+ gettext.h \
+ debug.h filedef.h hash.h \
  variable.h
+
+# .deps/loadapi.Po
+loadapi.o: loadapi.c makeint.h config.h \
+ gnumake.h \
+ getopt.h \
+ gettext.h \
+ filedef.h hash.h \
+ variable.h dep.h
 
 # .deps/loadavg-getloadavg.Po
 # dummy
 
 # .deps/main.Po
-main.o: main.c make.h config.h \
+main.o: main.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- dep.h filedef.h hash.h variable.h job.h \
- commands.h rule.h debug.h getopt.h \
+ filedef.h hash.h dep.h \
+ variable.h job.h output.h \
+ commands.h rule.h debug.h \
+ getopt.h
 
 # .deps/misc.Po
-misc.o: misc.c make.h config.h \
+misc.o: misc.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- dep.h debug.h
+ filedef.h hash.h dep.h \
+ debug.h \
+
+# .deps/output.Po
+output.o: output.c makeint.h config.h \
+ gnumake.h \
+ getopt.h \
+ gettext.h \
+ job.h output.h \
 
 # .deps/read.Po
-read.o: read.c make.h config.h \
+read.o: read.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- dep.h filedef.h hash.h job.h \
- commands.h variable.h rule.h debug.h \
+ filedef.h hash.h dep.h job.h output.h \
+ commands.h variable.h rule.h \
+ debug.h
 
 # .deps/remake.Po
-remake.o: remake.c make.h config.h \
+remake.o: remake.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
  filedef.h hash.h job.h \
- commands.h dep.h variable.h debug.h \
+ output.h \
+ commands.h dep.h variable.h \
+ debug.h
 
 # .deps/remote-cstms.Po
 # dummy
 
 # .deps/remote-stub.Po
-remote-stub.o: remote-stub.c make.h config.h \
+remote-stub.o: remote-stub.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
  filedef.h hash.h job.h \
+ output.h \
  commands.h
 
 # .deps/rule.Po
-rule.o: rule.c make.h config.h \
+rule.o: rule.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- dep.h filedef.h \
- hash.h job.h \
- commands.h variable.h \
- rule.h
+ filedef.h hash.h dep.h job.h output.h \
+ commands.h variable.h rule.h
 
 # .deps/signame.Po
-signame.o: signame.c make.h config.h \
+signame.o: signame.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
 
 # .deps/strcache.Po
-strcache.o: strcache.c make.h config.h \
+strcache.o: strcache.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
  hash.h
 
 # .deps/variable.Po
-variable.o: variable.c make.h config.h \
+variable.o: variable.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- dep.h filedef.h \
- hash.h job.h \
- commands.h variable.h \
- rule.h
+ filedef.h hash.h dep.h job.h output.h \
+ commands.h variable.h rule.h
 
 # .deps/version.Po
 version.o: version.c config.h
@@ -757,7 +810,9 @@ version.o: version.c config.h
 # dummy
 
 # .deps/vpath.Po
-vpath.o: vpath.c make.h config.h \
+vpath.o: vpath.c makeint.h config.h \
+ gnumake.h \
  getopt.h \
  gettext.h \
- filedef.h hash.h variable.h
+ filedef.h hash.h \
+ variable.h

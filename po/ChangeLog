@@ -1,3 +1,15 @@
+2013-01-06  Paul Smith  <psmith@gnu.org>
+
+	* POTFILES.in: Add new load.c file.
+
+2012-01-12  Paul Smith  <psmith@gnu.org>
+
+	* POTFILES.in: Add new guile.c file.
+
+2011-09-26  Paul Smith  <psmith@gnu.org>
+
+	* LINGUAS: Added new translation file for Czech (cs).
+
 2009-09-16  Paul Smith  <psmith@gnu.org>
 
 	* LINGUAS: Added new translation for Italian (it).
@@ -65,8 +77,7 @@
 
 	* POTFILES.in, LINGUAS, Makevars: Created.
 
-Copyright (C) 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009 Free Software
-Foundation, Inc.
+Copyright (C) 2002-2013 Free Software Foundation, Inc.
 This file is part of GNU Make.
 
 GNU Make is free software; you can redistribute it and/or modify it under the

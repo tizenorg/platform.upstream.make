@@ -1,9 +1,8 @@
 #!/bin/sh
-# Shell script to build GNU Make in the absence of any `make' program.
+# Shell script to build GNU Make in the absence of any 'make' program.
 # @configure_input@
 
-# Copyright (C) 1993, 1994, 1995, 1996, 1997, 1998, 1999, 2000, 2001, 2002,
-# 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010 Free Software Foundation, Inc.
+# Copyright (C) 1993-2013 Free Software Foundation, Inc.
 # This file is part of GNU Make.
 #
 # GNU Make is free software; you can redistribute it and/or modify it under
@@ -39,7 +38,7 @@ EXEEXT='@EXEEXT@'
 prefix='@prefix@'
 # Common prefix for machine-dependent installed files.
 exec_prefix=`eval echo @exec_prefix@`
-# Directory to find libraries in for `-lXXX'.
+# Directory to find libraries in for '-lXXX'.
 libdir=${exec_prefix}/lib
 # Directory to search by default for included makefiles.
 includedir=${prefix}/include
@@ -53,7 +52,7 @@ defines="-DALIASPATH=\"${aliaspath}\" -DLOCALEDIR=\"${localedir}\" -DLIBDIR=\"${
 set -e
 
 # These are all the objects we need to link together.
-objs="ar.${OBJEXT} arscan.${OBJEXT} commands.${OBJEXT} default.${OBJEXT} dir.${OBJEXT} expand.${OBJEXT} file.${OBJEXT} function.${OBJEXT} getopt.${OBJEXT} getopt1.${OBJEXT} implicit.${OBJEXT} job.${OBJEXT} main.${OBJEXT} misc.${OBJEXT} read.${OBJEXT} remake.${OBJEXT} rule.${OBJEXT} signame.${OBJEXT} strcache.${OBJEXT} variable.${OBJEXT} version.${OBJEXT} vpath.${OBJEXT} hash.${OBJEXT} remote-${REMOTE}.${OBJEXT} ${extras} ${ALLOCA}"
+objs="ar.${OBJEXT} arscan.${OBJEXT} commands.${OBJEXT} default.${OBJEXT} dir.${OBJEXT} expand.${OBJEXT} file.${OBJEXT} function.${OBJEXT} getopt.${OBJEXT} getopt1.${OBJEXT} implicit.${OBJEXT} job.${OBJEXT} load.${OBJEXT} loadapi.${OBJEXT} main.${OBJEXT} misc.${OBJEXT} output.${OBJEXT} read.${OBJEXT} remake.${OBJEXT} rule.${OBJEXT} signame.${OBJEXT} strcache.${OBJEXT} variable.${OBJEXT} version.${OBJEXT} vpath.${OBJEXT} hash.${OBJEXT} guile.${OBJEXT} remote-${REMOTE}.${OBJEXT} ${extras} ${ALLOCA}"
 
 if [ x"$GLOBLIB" != x ]; then
   objs="$objs glob/fnmatch.${OBJEXT} glob/glob.${OBJEXT}"
