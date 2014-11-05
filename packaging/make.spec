@@ -1,13 +1,13 @@
 Name:           make
 Url:            http://www.gnu.org/software/make/make.html
 Provides:       gmake
-Version:        3.82
+Version:        4.0
 Release:        0
 Summary:        GNU make
 License:        GPL-2.0+
-Group:          Development/Tools/Building
-Source:         make-%version.tar.bz2
-Source1001: 	make.manifest
+Group:          Platform Development/Build
+Source:         make-%{version}.tar.bz2
+Source1001:     make.manifest
 
 %description
 The GNU make command with extensive documentation.
@@ -19,32 +19,28 @@ cp %{SOURCE1001} .
 %build
 export AUTOPOINT=true
 %reconfigure --disable-nls
-make %{?_smp_mflags}
+%__make %{?_smp_mflags}
 
 %check
-make check
+%__make check
 
 %install
-make DESTDIR=$RPM_BUILD_ROOT install
-ln -s make $RPM_BUILD_ROOT/usr/bin/gmake
+%make_install
+ln -sf make %{buildroot}%{_bindir}/gmake
 
 %files 
 %manifest %{name}.manifest
 %defattr(-,root,root)
 %license COPYING
-/usr/bin/make
-/usr/bin/gmake
-%doc /usr/share/info/make.info-*.gz
-%doc /usr/share/info/make.info.gz
-%doc /usr/share/man/man1/make.1.gz
-
-%clean
-rm -rf $RPM_BUILD_ROOT
+%{_bindir}/make
+%{_bindir}/gmake
+%{_includedir}/gnumake.h
+%doc %{_infodir}/make.info-*.gz
+%doc %{_infodir}/make.info.gz
+%doc %{_mandir}/man1/make.1.gz
 
 %post
 %install_info --info-dir=%{_infodir} %{_infodir}/%{name}.info.gz
 
 %postun
 %install_info_delete --info-dir=%{_infodir} %{_infodir}/%{name}.info.gz
-
-%changelog
