@@ -1,3 +1,12 @@
+Code-Review+1: Kévin THIERRY <kevin.thierry@open.eurogiciel.org>
+Verified+1: Kévin THIERRY <kevin.thierry@open.eurogiciel.org>
+Code-Review+2: Philippe Coval <philippe.coval@open.eurogiciel.org>
+Submitted-by: Philippe Coval <philippe.coval@open.eurogiciel.org>
+Submitted-at: Tue, 06 Jan 2015 05:28:38 -0800
+Reviewed-on: https://review.tizen.org/gerrit/33029
+Project: platform/upstream/make
+Branch: refs/heads/tizen
+
 Reviewed-on: https://review.tizen.org/gerrit/33029
 Project: platform/upstream/make
 Branch: refs/heads/tizen
