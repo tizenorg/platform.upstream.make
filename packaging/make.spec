@@ -18,6 +18,9 @@ The GNU make command with extensive documentation.
 cp %{SOURCE1001} .
 
 %build
+export CFLAGS+=" -fvisibility=hidden"
+  export CXXFLAGS+=" -fvisibility=hidden"
+  
 export AUTOPOINT=true
 %reconfigure --disable-nls
 %__make %{?_smp_mflags}
