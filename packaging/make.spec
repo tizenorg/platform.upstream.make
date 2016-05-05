@@ -18,7 +18,7 @@ The GNU make command with extensive documentation.
 cp %{SOURCE1001} .
 
 %build
-export AUTOPOINT=true
+export AUTOPOINT=true LIBS+=" -ldl "
 %reconfigure --disable-nls
 %__make %{?_smp_mflags}
 
